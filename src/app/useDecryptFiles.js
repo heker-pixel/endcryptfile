@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { deriveKey, decryptData } from './keyHandler';
+import pako from 'pako';
 
 const useDecryptFiles = () => {
   const [decryptedFiles, setDecryptedFiles] = useState([]);
@@ -24,13 +25,13 @@ const useDecryptFiles = () => {
         const saltSize = 16;
         const ivSize = 12;
 
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {  
           const salt = new Uint8Array(arrayBuffer.slice(offset, offset + saltSize));
           salts.push(salt);
           offset += saltSize;
         }
 
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i++) {  
           const iv = new Uint8Array(arrayBuffer.slice(offset, offset + ivSize));
           ivs.push(iv);
           offset += ivSize;
@@ -49,7 +50,9 @@ const useDecryptFiles = () => {
           decryptedData = await decryptData(decryptedData, key, ivs[i]);
         }
 
-        const blob = new Blob([decryptedData]);
+        const decompressedData = pako.inflate(new Uint8Array(decryptedData));
+
+        const blob = new Blob([decompressedData], { type: 'application/octet-stream' });
         const url = URL.createObjectURL(blob);
         decryptedFiles.push({ name: file.name, url });
       }

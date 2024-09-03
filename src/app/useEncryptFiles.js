@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { deriveKey, encryptData } from './keyHandler';
+import pako from 'pako';  // Import the pako library for Deflate compression
 
 const useEncryptFiles = () => {
   const [encryptedFiles, setEncryptedFiles] = useState([]);
@@ -13,7 +14,7 @@ const useEncryptFiles = () => {
       }
 
       const files = fileInput.files;
-      const layers = 2;
+      const layers = 2;  
       const encryptedFiles = [];
 
       for (const file of files) {
@@ -24,9 +25,11 @@ const useEncryptFiles = () => {
           return;
         }
 
+        const compressedData = pako.deflate(new Uint8Array(arrayBuffer));
+        
         const salts = [];
         const ivs = [];
-        let encryptedData = arrayBuffer;
+        let encryptedData = compressedData.buffer;
 
         for (let i = 0; i < layers; i++) {
           const salt = window.crypto.getRandomValues(new Uint8Array(16));
